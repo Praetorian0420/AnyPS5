@@ -60,6 +60,8 @@ def main():
                 "Unsupported DT_PLTREL")
         convert("unaligned-plt", [(3, 0x300), (2, 1), (20, 7), (23, 0x720)],
                 "Invalid DT_PLTRELSZ")
+        convert("bad-rela-range", [(3, 0x300), (7, 0x2000), (8, 24), (9, 24)],
+                "Relocation table out of bounds")
         convert("duplicate-got-variant", [(3, 0x300), (0x61000027, 0x300)],
                 "Both DT_OS_ and DT_ variants")
     print("Optional PLT integration tests passed")

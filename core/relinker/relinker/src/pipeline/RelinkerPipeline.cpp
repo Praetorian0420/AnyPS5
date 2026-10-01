@@ -263,8 +263,16 @@ RelinkResult RelinkerPipeline::Relink(const std::vector<std::uint8_t>& sourceElf
     };
 
     auto extractRelative = [&](const FileByteOffset relaOff, const ByteCount relaSize) {
+        if (relaSize == 0)
+            return;
+        if (relaOff > raw.size() || relaSize > raw.size() - relaOff)
+            throw RelinkerException("Relocation table out of bounds", relaOff);
+
         for (ByteCount off = 0; off + relaEntSize <= relaSize; off += relaEntSize) {
             const FileByteOffset pos = relaOff + off;
+            if (pos + relaEntSize > raw.size())
+                throw RelinkerException("Relocation entry out of bounds", pos);
+
             std::uint64_t rOffset = 0, rInfo = 0;
             std::int64_t rAddend = 0;
             std::memcpy(&rOffset, raw.data() + pos, 8);
