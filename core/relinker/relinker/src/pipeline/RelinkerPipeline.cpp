@@ -147,6 +147,15 @@ RelinkResult RelinkerPipeline::Relink(const std::vector<std::uint8_t>& sourceElf
 
     const std::vector<std::uint8_t>& raw = _elfReader->GetRawBytes();
 
+    auto validateRelaRange = [&](const FileByteOffset relaOff, const ByteCount relaSize) {
+        if (relaSize == 0)
+            return;
+        if (relaOff > raw.size() || relaSize > raw.size() - relaOff)
+            throw RelinkerException("Relocation table out of bounds", relaOff);
+    };
+    validateRelaRange(dynRelaOffset, dynRelaSize);
+    validateRelaRange(dynJmpRelOffset, dynJmpRelSize);
+
     auto readCStr = [&](FileByteOffset strOff) -> std::string {
         std::string result;
         FileByteOffset pos = dynStrTabOffset + strOff;
@@ -265,8 +274,6 @@ RelinkResult RelinkerPipeline::Relink(const std::vector<std::uint8_t>& sourceElf
     auto extractRelative = [&](const FileByteOffset relaOff, const ByteCount relaSize) {
         if (relaSize == 0)
             return;
-        if (relaOff > raw.size() || relaSize > raw.size() - relaOff)
-            throw RelinkerException("Relocation table out of bounds", relaOff);
 
         for (ByteCount off = 0; off + relaEntSize <= relaSize; off += relaEntSize) {
             const FileByteOffset pos = relaOff + off;
